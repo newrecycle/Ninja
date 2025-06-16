@@ -41,6 +41,7 @@ ___
 - [Configuration Guide](https://github.com/is-leeroy-jenkins/Ninja/blob/master/Ninja/Resources/Github/Configuration.md) - information for the Ninja configuration file. 
 - [Distribution Guide](https://github.com/is-leeroy-jenkins/Ninja/blob/master/Ninja/Resources/Github/Distribution.md) -  distributing Ninja.
 
+___
 
 ### 📦 Download
 
