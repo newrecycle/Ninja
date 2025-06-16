@@ -32,6 +32,7 @@ ___
 - [Validators](https://github.com/is-leeroy-jenkins/Ninja/tree/master/UI/Views) - Views
 - [Ninja](https://github.com/is-leeroy-jenkins/Ninja/tree/master/UI/ViewModels) - models used by the ui
 
+___
 
 ### ![](https://github.com/is-leeroy-jenkins/Ninja/blob/master/Ninja/Resources/GitHubImages/documentation.png)  Documentation
 
@@ -94,7 +95,7 @@ You can build the application like any other .NET / WPF application on Windows.
    > dotnet build .\Source\Ninja.sln --configuration Release --no-restore
    > ```
 
-
+___
 
 ### 🙏 Acknoledgements
 
