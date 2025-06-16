@@ -1,4 +1,4 @@
-##  Ninja
+######  Ninja
 ![](https://github.com/is-leeroy-jenkins/Ninja/blob/master/Ninja/Resources/GitHubImages/ProjectTemplate.png)
 
 <div align="left">
@@ -12,11 +12,12 @@
     Connect and manage remote systems with Remote Desktop, PowerShell, PuTTY, TigerVNC or AWS (Systems Manager) Session Manager. Analyze and troubleshoot your network and systems with features such as the WiFi Analyzer,IP Scanner, Port Scanner, Ping Monitor, Traceroute, DNS lookup or LLDP/CDP capture in a unfied interface. Hosts (or networks) can be saved in (encrypted) profiles and used across all features.  
 
 </div>
+
 ___
 
 ![](https://github.com/is-leeroy-jenkins/Ninja/blob/master/Ninja/Resources/GitHubImages/NetworkNinja.gif)
 
-## ![](https://github.com/is-leeroy-jenkins/Ninja/blob/master/Ninja/Resources/GitHubImages/csharp.png)  Code
+### ![](https://github.com/is-leeroy-jenkins/Ninja/blob/master/Ninja/Resources/GitHubImages/csharp.png)  Code
 
 - Ninja supports 'AnyCPU' as well as x86/x64 specific builds
 - [Controls](https://github.com/is-leeroy-jenkins/Ninja/tree/master/Ninja.Controls) - controls associated main ui layer and related functionality.
@@ -32,7 +33,7 @@ ___
 - [Ninja](https://github.com/is-leeroy-jenkins/Ninja/tree/master/UI/ViewModels) - models used by the ui
 
 
-## ![](https://github.com/is-leeroy-jenkins/Ninja/blob/master/Ninja/Resources/GitHubImages/documentation.png)  Documentation
+### ![](https://github.com/is-leeroy-jenkins/Ninja/blob/master/Ninja/Resources/GitHubImages/documentation.png)  Documentation
 
 - [User Guide](https://github.com/is-leeroy-jenkins/Ninja/blob/master/Ninja/Resources/Github/Users.md) - how to use Ninja.
 - [Compilation Guide](https://github.com/is-leeroy-jenkins/Ninja/blob/master/Ninja/Resources/Github/Compilation.md) - instructions on how to compile Ninja.
@@ -40,14 +41,14 @@ ___
 - [Distribution Guide](https://github.com/is-leeroy-jenkins/Ninja/blob/master/Ninja/Resources/Github/Distribution.md) -  distributing Ninja.
 
 
-## 📦 Download
+### 📦 Download
 
 Pre-built and binaries (setup, portable and archive) are available on the with install instructions (e.g. silent install). 
 
 
 
 
-## ![](https://github.com/is-leeroy-jenkins/Ninja/blob/master/Ninja/Resources/GitHubImages/tools.png) Build
+### ![](https://github.com/is-leeroy-jenkins/Ninja/blob/master/Ninja/Resources/GitHubImages/tools.png) Build
 
 - [x] VisualStudio 2022
 - [x] Based on .NET8 and WPF
@@ -95,7 +96,7 @@ You can build the application like any other .NET / WPF application on Windows.
 
 
 
-## 🙏 Acknoledgements
+### 🙏 Acknoledgements
 
 Ninja uses the following projects and libraries. Please consider supporting them as well (e.g., by starring their repositories):
 
@@ -115,7 +116,7 @@ Ninja uses the following projects and libraries. Please consider supporting them
 | [NetBeauty2](https://github.com/nulastudio/NetBeauty2)                        | Move .NET app runtime components and dependencies into a sub-directory |
 | [PSDiscoveryProtocol](https://github.com/lahell/PSDiscoveryProtocol)          | PowerShell module for LLDP/CDP discovery                               |
 
-## ![](https://github.com/is-leeroy-jenkins/Ninja/blob/master/Ninja/Resources/GitHubImages/signature.png)  Code Signing 
+### ![](https://github.com/is-leeroy-jenkins/Ninja/blob/master/Ninja/Resources/GitHubImages/signature.png)  Code Signing 
 
 Ninja uses free code signing provided by [SignPath.io](https://signpath.io/) and a free code signing certificate
 from [SignPath Foundation](https://signpath.org/).
@@ -125,7 +126,7 @@ Build artifacts are automatically sent to [SignPath.io](https://signpath.io/) vi
 The signed binaries are then uploaded to the [GitHub releases](https://github.com/is-leeroy-jenkins/Ninja/releases) page.
 
 
-## ![](https://github.com/is-leeroy-jenkins/Ninja/blob/master/Ninja/Resources/GitHubImages/training.png) Privacy Policy
+### ![](https://github.com/is-leeroy-jenkins/Ninja/blob/master/Ninja/Resources/GitHubImages/training.png) Privacy Policy
 
 This program will not transfer any information to other networked systems unless specifically requested by the user or the person installing or operating it.
 
@@ -135,7 +136,7 @@ Ninja has integrated the following services for additional functions, which can 
 - [ipify.org](https://www.ipify.org/) (Retrieve the public IP address used by the client)
 - [ip-api.com](https://ip-api.com/docs/legal) (Retrieve network information such as geo location, ISP, DNS resolver used, etc. used by the client)
 
-## 📝 License
+### 📝 License
 
 Ninja is published under the [MIT Public License](https://github.com/is-leeroy-jenkins/Ninja/blob/master/Ninja.Documentation/Licenses/Ninja.txt).
 
