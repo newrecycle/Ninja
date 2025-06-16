@@ -12,9 +12,9 @@
     Connect and manage remote systems with Remote Desktop, PowerShell, PuTTY, TigerVNC or AWS (Systems Manager) Session Manager. Analyze and troubleshoot your network and systems with features such as the WiFi Analyzer,IP Scanner, Port Scanner, Ping Monitor, Traceroute, DNS lookup or LLDP/CDP capture in a unfied interface. Hosts (or networks) can be saved in (encrypted) profiles and used across all features.  
 
 </div>
+___
 
 ![](https://github.com/is-leeroy-jenkins/Ninja/blob/master/Ninja/Resources/GitHubImages/NetworkNinja.gif)
-___
 
 ## ![](https://github.com/is-leeroy-jenkins/Ninja/blob/master/Ninja/Resources/GitHubImages/csharp.png)  Code
 
