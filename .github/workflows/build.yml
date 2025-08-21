@@ -9,6 +9,24 @@ on:
 jobs:
   build:
     runs-on: windows-2022
+    env:
+      # Base64-encoded Inno Setup script. We substitute __APPVER__, __APPGUID__, __PUBDIR__ at runtime.
+      INNO_ISS_B64: |
+        I2RlZmluZSBNeUFwcE5hbWUgIk5pbmphIgojZGVmaW5lIE15QXBwVmVyc2lvbiAiX19BUFBWRVJf
+        XyIKI2RlZmluZSBNeUFwcFB1Ymxpc2hlciAibmV3cmVjeWNsZSIKI2RlZmluZSBNeUFwcEV4ZU5h
+        bWUgIk5pbmphLmV4ZSIKCltTZXR1cF0KQXBwSWQ9e3tfX0FQUEdVSURfX319CkFwcE5hbWU9eyNN
+        eUFwcE5hbWV9CkFwcFZlcnNpb249eyNNeUFwcFZlcnNpb259CkFwcFB1Ymxpc2hlcj17I015QXBw
+        UHVibGlzaGVyfQpEZWZhdWx0RGlyTmFtZT17cGZ9XHsjTXlBcHBOYW1lfQpEZWZhdWx0R3JvdXBO
+        YW1lPXsjTXlBcHBOYW1lfQpEaXNhYmxlUHJvZ3JhbUdyb3VwUGFnZT15ZXMKT3V0cHV0RGlyPXsj
+        U291cmNlUGF0aH1cb3V0cHV0Ck91dHB1dEJhc2VGaWxlbmFtZT1OaW5qYS1TZXR1cC14NjQKQ29t
+        cHJlc3Npb249bHptYQpTb2xpZENvbXByZXNzaW9uPXllcwpBcmNoaXRlY3R1cmVzQWxsb3dlZD14
+        NjQKQXJjaGl0ZWN0dXJlc0luc3RhbGxJbjY0Qml0TW9kZT14NjQKCltGaWxlc10KU291cmNlOiAi
+        X19QVUJESVJfX1wqIjsgRGVzdERpcjogInthcHB9IjsgRmxhZ3M6IHJlY3Vyc2VzdWJkaXJzIGNy
+        ZWF0ZWFsbHN1YmRpcnMKCltJY29uc10KTmFtZTogIntncm91cH1cTmluamEiOyBGaWxlbmFtZTog
+        InthcHB9XE5pbmphLmV4ZSIKTmFtZTogIntjb21tb25kZXNrdG9wfVxOaW5qYSI7IEZpbGVuYW1l
+        OiAie2FwcH1cTmluamEuZXhlIjsgVGFza3M6IGRlc2t0b3BpY29uCgpbVGFza3NdCk5hbWU6ICJk
+        ZXNrdG9waWNvbiI7IERlc2NyaXB0aW9uOiAiQ3JlYXRlIGEgJmRlc2t0b3AgaWNvbiI7IEdyb3Vw
+        RGVzY3JpcHRpb246ICJBZGRpdGlvbmFsIGljb25zOiIK
 
     steps:
       - name: Checkout (with submodules)
@@ -26,14 +44,12 @@ jobs:
         shell: pwsh
         run: dotnet restore .\Ninja.sln
 
-      # Build solution; suppress XML-doc noise (CS1591) only
       - name: Build (Release)
         shell: pwsh
         run: >
           dotnet build .\Ninja.sln -c Release --no-restore
           /p:NoWarn=1591
 
-      # Publish self-contained win-x64 (avoids splash->exit due to missing runtime)
       - name: Publish self-contained (win-x64)
         id: publish
         shell: pwsh
@@ -45,8 +61,8 @@ jobs:
             /p:IncludeNativeLibrariesForSelfExtract=true `
             /p:NoWarn=1591
           $pub = Get-ChildItem -Directory -Recurse -Path Ninja\bin\Release `
-                  | Where-Object { $_.Name -ieq "publish" -and $_.FullName -like "*win-x64*" -and $_.FullName -like "*net8.0-windows*" } `
-                  | Select-Object -Last 1 -ExpandProperty FullName
+            | Where-Object { $_.Name -ieq "publish" -and $_.FullName -like "*win-x64*" -and $_.FullName -like "*net8.0-windows*" } `
+            | Select-Object -Last 1 -ExpandProperty FullName
           if (-not $pub) { throw "Publish directory not found." }
           "publishDir=$pub" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
 
@@ -60,12 +76,11 @@ jobs:
           Compress-Archive -Path "$pub\*" -DestinationPath $zip
           "zipPath=$zip" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
 
-      # Minimal installer built at runtime
       - name: Install Inno Setup
         shell: pwsh
         run: choco install -y innosetup
 
-      - name: Create Inno Setup script
+      - name: Decode and finalize Inno Setup script
         id: iss
         shell: pwsh
         run: |
@@ -78,39 +93,11 @@ jobs:
           $dist = "$env:RUNNER_TEMP\dist"
           New-Item -ItemType Directory -Force -Path $dist | Out-Null
           $issPath = Join-Path $dist "NinjaSetup.iss"
-          $issContent = @'
-#define MyAppName "Ninja"
-#define MyAppVersion "__APPVER__"
-#define MyAppPublisher "newrecycle"
-#define MyAppExeName "Ninja.exe"
-
-[Setup]
-AppId={{__APPGUID__}}
-AppName={#MyAppName}
-AppVersion={#MyAppVersion}
-AppPublisher={#MyAppPublisher}
-DefaultDirName={pf}\{#MyAppName}
-DefaultGroupName={#MyAppName}
-DisableProgramGroupPage=yes
-OutputDir={#SourcePath}\output
-OutputBaseFilename=Ninja-Setup-x64
-Compression=lzma
-SolidCompression=yes
-ArchitecturesAllowed=x64
-ArchitecturesInstallIn64BitMode=x64
-
-[Files]
-Source: "__PUBDIR__\*"; DestDir: "{app}"; Flags: recursesubdirs createallsubdirs
-
-[Icons]
-Name: "{group}\Ninja"; Filename: "{app}\Ninja.exe"
-Name: "{commondesktop}\Ninja"; Filename: "{app}\Ninja.exe"; Tasks: desktopicon
-
-[Tasks]
-Name: "desktopicon"; Description: "Create a &desktop icon"; GroupDescription: "Additional icons:"
-'@
-          $issContent = $issContent.Replace("__APPVER__", $ver).Replace("__APPGUID__", $guid).Replace("__PUBDIR__", $pub)
-          Set-Content -Path $issPath -Encoding UTF8 -Value $issContent
+          $b64 = ($env:INNO_ISS_B64 -replace '\s','')
+          [IO.File]::WriteAllBytes($issPath, [Convert]::FromBase64String($b64))
+          $content = Get-Content -Raw -Path $issPath
+          $content = $content.Replace("__APPVER__", $ver).Replace("__APPGUID__", $guid).Replace("__PUBDIR__", $pub)
+          Set-Content -Path $issPath -Encoding UTF8 -Value $content
           "issPath=$issPath" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
 
       - name: Build installer (ISCC)
