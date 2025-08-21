@@ -1,3 +1,5 @@
+IDK MAN thi shit wont build on github, gg -newrecycle
+
 ######  Ninja
 ![](https://github.com/is-leeroy-jenkins/Ninja/blob/master/Ninja/Resources/GitHubImages/ProjectTemplate.png)
 
