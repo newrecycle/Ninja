@@ -1,0 +1,42 @@
+name: Build Ninja (.NET 8 WPF)
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-2022
+
+    steps:
+      - name: Checkout (with submodules)
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+          fetch-depth: 0
+
+      - name: Setup .NET 8 SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Restore
+        shell: pwsh
+        run: dotnet restore .\Ninja.sln
+
+      - name: Build (Release)
+        shell: pwsh
+        run: dotnet build .\Ninja.sln -c Release --no-restore
+
+      - name: Upload built app artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: Ninja-Release
+          if-no-files-found: error
+          path: |
+            Ninja\bin\Release\**\Ninja.exe
+            Ninja\bin\Release\**\*.dll
+            Ninja\bin\Release\**\*.json
+            Ninja\bin\Release\**\*.pdb
