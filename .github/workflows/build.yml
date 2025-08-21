@@ -1,4 +1,4 @@
-name: Build Ninja (.NET 8 WPF)
+name: Build & Package Ninja (.NET 8 WPF, win-x64)
 
 on:
   push:
@@ -14,29 +14,131 @@ jobs:
       - name: Checkout (with submodules)
         uses: actions/checkout@v4
         with:
-          submodules: true
           fetch-depth: 0
+          submodules: true
 
       - name: Setup .NET 8 SDK
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 8.0.x
 
+      # 1) Restore using the correct solution path at repo root
       - name: Restore
         shell: pwsh
         run: dotnet restore .\Ninja.sln
 
+      # 2) Build solution (Release), suppress XML doc noise (CS1591)
       - name: Build (Release)
         shell: pwsh
-        run: dotnet build .\Ninja.sln -c Release --no-restore
+        run: >
+          dotnet build .\Ninja.sln -c Release --no-restore
+          /p:NoWarn=1591
 
-      - name: Upload built app artifacts
+      # 3) Publish a self-contained win-x64 build (avoids splash->exit)
+      - name: Publish self-contained (win-x64)
+        id: publish
+        shell: pwsh
+        run: |
+          $proj = "Ninja\Ninja.csproj"
+          dotnet publish $proj -c Release -r win-x64 --self-contained true `
+            /p:PublishTrimmed=false `
+            /p:PublishSingleFile=false `
+            /p:IncludeNativeLibrariesForSelfExtract=true `
+            /p:NoWarn=1591
+          # Resolve the publish directory (net8.0-windows*\win-x64\publish)
+          $pub = Get-ChildItem -Directory -Recurse -Path Ninja\bin\Release `
+                  | Where-Object { $_.Name -ieq "publish" -and $_.FullName -like "*win-x64*" -and $_.FullName -like "*net8.0-windows*" } `
+                  | Select-Object -Last 1 -ExpandProperty FullName
+          if (-not $pub) { throw "Publish directory not found." }
+          echo "publishDir=$pub" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+
+      # 4) Zip the published folder
+      - name: Zip publish output
+        id: zip
+        shell: pwsh
+        run: |
+          $zip = "$env:RUNNER_TEMP\Ninja-win-x64-publish.zip"
+          $pub = "${{ steps.publish.outputs.publishDir }}"
+          if (Test-Path $zip) { Remove-Item $zip -Force }
+          Compress-Archive -Path "$pub\*" -DestinationPath $zip
+          echo "zipPath=$zip" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+
+      # 5) Create an Inno Setup installer from the published output
+      - name: Install Inno Setup
+        shell: pwsh
+        run: choco install -y innosetup
+
+      - name: Create Inno Setup script
+        id: iss
+        shell: pwsh
+        run: |
+          $pub = "${{ steps.publish.outputs.publishDir }}"
+          $exe = Join-Path $pub "Ninja.exe"
+          if (-not (Test-Path $exe)) { throw "Ninja.exe not found in $pub" }
+          $ver = (Get-Item $exe).VersionInfo.ProductVersion
+          if (-not $ver) { $ver = "1.0.0" }
+          $guid = [guid]::NewGuid().ToString()
+          $dist = "$env:RUNNER_TEMP\dist"
+          New-Item -ItemType Directory -Force -Path $dist | Out-Null
+          $issPath = Join-Path $dist "NinjaSetup.iss"
+          @"
+#define MyAppName "Ninja"
+#define MyAppVersion "{0}"
+#define MyAppPublisher "newrecycle"
+#define MyAppExeName "Ninja.exe"
+
+[Setup]
+AppId={{{1}}}
+AppName={#MyAppName}
+AppVersion={#MyAppVersion}
+AppPublisher={#MyAppPublisher}
+DefaultDirName={pf}\{#MyAppName}
+DefaultGroupName={#MyAppName}
+DisableProgramGroupPage=yes
+OutputDir={#SourcePath}\output
+OutputBaseFilename=Ninja-Setup-x64
+Compression=lzma
+SolidCompression=yes
+ArchitecturesAllowed=x64
+ArchitecturesInstallIn64BitMode=x64
+
+[Files]
+Source: "{2}\*"; DestDir: "{app}"; Flags: recursesubdirs createallsubdirs
+
+[Icons]
+Name: "{group}\Ninja"; Filename: "{app}\Ninja.exe"
+Name: "{commondesktop}\Ninja"; Filename: "{app}\Ninja.exe"; Tasks: desktopicon
+
+[Tasks]
+Name: "desktopicon"; Description: "Create a &desktop icon"; GroupDescription: "Additional icons:"
+"@ -f $ver, $guid, $pub | Set-Content -Path $issPath -Encoding UTF8
+          echo "issPath=$issPath" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+
+      - name: Build installer (ISCC)
+        id: iscc
+        shell: pwsh
+        run: |
+          $iss = "${{ steps.iss.outputs.issPath }}"
+          $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+          if (-not (Test-Path $iscc)) { throw "ISCC.exe not found at $iscc" }
+          & "$iscc" "$iss"
+          $out = Join-Path (Split-Path $iss) "output"
+          if (-not (Test-Path $out)) { throw "Installer output folder not found." }
+          $setup = Get-ChildItem -Path $out -Filter "Ninja-Setup-x64*.exe" | Select-Object -Last 1
+          if (-not $setup) { throw "Installer EXE not found." }
+          echo "setupPath=$($setup.FullName)" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+
+      # 6) Upload artifacts: the publish zip and the installer setup EXE
+      - name: Upload publish zip
         uses: actions/upload-artifact@v4
         with:
-          name: Ninja-Release
+          name: Ninja-win-x64-publish
+          path: ${{ steps.zip.outputs.zipPath }}
           if-no-files-found: error
-          path: |
-            Ninja\bin\Release\**\Ninja.exe
-            Ninja\bin\Release\**\*.dll
-            Ninja\bin\Release\**\*.json
-            Ninja\bin\Release\**\*.pdb
+
+      - name: Upload setup EXE
+        uses: actions/upload-artifact@v4
+        with:
+          name: Ninja-Setup-x64
+          path: ${{ steps.iscc.outputs.setupPath }}
+          if-no-files-found: error
